@@ -45,60 +45,36 @@ void Engine::update()
 
     // could just be my controller, but tappedButton is needed to register the inputs quicker.
 
-    if (heldButton.c_up || tappedButton.c_up)
+    if (heldButton.d_up || tappedButton.d_up)
     {
-        cameraPos += basePlayerSpeed * deltaTime * cameraFront;
+        player.moveForward(deltaTime, basePlayerSpeed);
     }
 
-    if (heldButton.c_down || tappedButton.c_down)
+    if (heldButton.d_down || tappedButton.d_down)
     {
-        cameraPos -= basePlayerSpeed * deltaTime * cameraFront;
+        player.moveBackward(deltaTime, basePlayerSpeed);
     }
 
-    if (heldButton.c_left || tappedButton.c_left)
+    if (heldButton.d_left || tappedButton.d_left)
     {
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * basePlayerSpeed * deltaTime;
+        player.moveLeft(deltaTime, basePlayerSpeed);
     }
 
-    if (heldButton.c_right || tappedButton.c_right)
+    if (heldButton.d_right || tappedButton.d_right)
     {
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * basePlayerSpeed * deltaTime;
+        player.moveRight(deltaTime, basePlayerSpeed);
     }
 
     if (controllerInputs.stick_x >= joystickDeadzone || controllerInputs.stick_x <= -joystickDeadzone)
     {
-        cameraDirection.y += controllerInputs.stick_x * deltaTime;
-        if (cameraDirection.y > 360)
-        {
-            cameraDirection.y = 0;
-        }
-        if (cameraDirection.y < 0)
-        {
-            cameraDirection.y = 360;
-        }
+        player.lookYaw(deltaTime, controllerInputs.stick_x);
     }
 
     if (controllerInputs.stick_y >= joystickDeadzone || controllerInputs.stick_y <= -joystickDeadzone)
     {
-        cameraDirection.x += controllerInputs.stick_y * deltaTime;
-        if (cameraDirection.x > 360)
-        {
-            cameraDirection.x = 0;
-        }
-        if (cameraDirection.x < 0)
-        {
-            cameraDirection.x = 360;
-        }
+        player.lookPitch(deltaTime, controllerInputs.stick_y);
     }
-
-    front.x = cos(glm::radians(cameraDirection.y)) * cos(glm::radians(cameraDirection.x));
-    front.y = sin(glm::radians(cameraDirection.x));
-    front.z = sin(glm::radians(cameraDirection.y)) * cos(glm::radians(cameraDirection.x));
-
-    cameraFront = glm::normalize(front);
-
-    cameraRight = glm::normalize(glm::cross(cameraFront, up));
-    cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+    player.update();
 }
 
 void Engine::render()
@@ -117,11 +93,7 @@ void Engine::render()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(
-        cameraPos.x, cameraPos.y, cameraPos.z,
-        cameraPos.x + cameraFront.x, cameraPos.y + cameraFront.y, cameraPos.z + cameraFront.z,
-        cameraUp.x, cameraUp.y, cameraUp.z
-    );
+    player.moveAndOrient();
 
     // glTranslatef(0.0f, 0.0f, -5.0f);
 

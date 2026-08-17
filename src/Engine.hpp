@@ -1,35 +1,20 @@
-#ifndef ENGINE_HPP
-#define ENGINE_HPP
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #include <libdragon.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/gl_integration.h>
-#include "glm/glm.hpp"
+#include "glm/glm/glm.hpp"
+
+#include "Camera.hpp"
 
 class Engine
 {
 private:
     float basePlayerSpeed = 10.0f;
-    // probably going to make a camera class. This comes from https://learnopengl.com/Getting-started/Camera
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.3f);
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
 
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-    glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
-    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-    glm::vec3 front;
-
-    // pitch
-    float playerDirX = 0.0f;
-    // yaw
-    float playerDirY = 0.0f;
-
-    float playerCenterX;
-    float playerCenterY;
-    float playerCenterZ;
+    Camera player = Camera(0.0f,0.0f,-2.0f);
 
     float deltaTime = 0.0f;
 
@@ -77,6 +62,19 @@ private:
     GLubyte blockTopIndices[6] = {
         1, 2, 6,
         1, 6, 5};
+
+    unsigned char chunk[3 * 3 * 3] = {
+        0, 0, 0,
+        0, 0, 0,
+        1, 1, 1,
+
+        0, 0, 0,
+        1, 1, 1,
+        1, 1, 1,
+
+        1, 1, 1,
+        1, 1, 1,
+        1, 1, 1};
 
     void update();
     void render();
