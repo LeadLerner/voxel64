@@ -6,7 +6,7 @@ include $(N64_INST)/include/n64.mk
 all: hello.z64
 .PHONY: all
 
-OBJS = $(BUILD_DIR)/main.o
+OBJS = $(patsubst $(SOURCE_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(wildcard $(SOURCE_DIR)/*.cpp))
 
 hello.z64: N64_ROM_TITLE="Hello World"
 
