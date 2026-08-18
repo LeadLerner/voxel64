@@ -14,7 +14,7 @@ class Engine
 private:
     float basePlayerSpeed = 10.0f;
 
-    Camera player = Camera(0.0f,0.0f,-2.0f);
+    Camera player = Camera(0.0f, 0.0f, -2.0f);
 
     float deltaTime = 0.0f;
 
@@ -63,21 +63,15 @@ private:
         1, 2, 6,
         1, 6, 5};
 
-    unsigned char chunk[3 * 3 * 3] = {
-        0, 0, 0,
-        0, 0, 0,
-        1, 1, 1,
-
-        0, 0, 0,
-        1, 1, 1,
-        1, 1, 1,
-
-        1, 1, 1,
-        1, 1, 1,
-        1, 1, 1};
+    unsigned char chunk[3 * 3 * 3] = {};
 
     void update();
     void render();
+
+    unsigned char pickBlock(unsigned char chunk[], unsigned char chunkSize,unsigned char x, unsigned char y, unsigned char z);
+
+    void generateChunk(unsigned char chunk[], unsigned char chunkSize);
+    void drawChunk(unsigned char chunk[], unsigned char chunkSize);
 
 public:
     Engine();

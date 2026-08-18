@@ -34,8 +34,54 @@ Engine::Engine()
 
     glVertexPointer(3, GL_FLOAT, 0, blockVertices);
 }
+
+void Engine::generateChunk(unsigned char chunk[], unsigned char chunkSize)
+{
+    for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
+    {
+
+        chunk[i] = 1;
+    }
+}
+
+unsigned char Engine::pickBlock(unsigned char chunk[], unsigned char chunkSize, unsigned char x, unsigned char y, unsigned char z)
+{
+    return x + (y * chunkSize) + (z * chunkSize * chunkSize);
+}
+
+void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
+{
+    for (int x = 0; x < chunkSize; x++)
+    {
+        for (int y = 0; y < chunkSize; y++)
+        {
+            glTranslatef(0, y, 0);
+            for (int z = 0; z < chunkSize; z++)
+            {
+                glTranslatef(0, 0, z);
+                if (pickBlock(chunk, chunkSize, x, y, z) != 0)
+                {
+                    glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBackIndices);
+                    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockFrontIndices);
+                    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockLeftIndices);
+                    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockRightIndices);
+                    glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBottomIndices);
+                    glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockTopIndices);
+                }
+            }
+        }
+    }
+}
+
 void Engine::update()
 {
+    generateChunk(chunk, 3);
     deltaTime = display_get_delta_time();
     joypad_poll();
 
@@ -95,20 +141,7 @@ void Engine::render()
 
     player.moveAndOrient();
 
-    // glTranslatef(0.0f, 0.0f, -5.0f);
-
-    glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBackIndices);
-    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockFrontIndices);
-    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockLeftIndices);
-    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockRightIndices);
-    glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBottomIndices);
-    glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockTopIndices);
+    drawChunk(chunk, 3);
 
     gl_context_end();
 
