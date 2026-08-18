@@ -46,13 +46,14 @@ void Engine::generateChunk(unsigned char chunk[], unsigned char chunkSize)
 
 unsigned char Engine::pickBlock(unsigned char chunk[], unsigned char chunkSize, unsigned char x, unsigned char y, unsigned char z)
 {
-    return x + (y * chunkSize) + (z * chunkSize * chunkSize);
+    return chunk[x + (y * chunkSize) + (z * chunkSize * chunkSize)];
 }
 
 void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
 {
     for (int x = 0; x < chunkSize; x++)
     {
+        glTranslatef(x, 0, 0);
         for (int y = 0; y < chunkSize; y++)
         {
             glTranslatef(0, y, 0);
@@ -74,8 +75,11 @@ void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
                     glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
                     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockTopIndices);
                 }
+                glTranslatef(0, 0, -z);
             }
+            glTranslatef(0, -y, 0);
         }
+        glTranslatef(-x, 0, 0);
     }
 }
 
