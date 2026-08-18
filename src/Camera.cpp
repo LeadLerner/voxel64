@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 
+//redundant probably
 Camera::Camera() {
     cameraPos.x = 0.0f;
     cameraPos.y = 0.0f;
@@ -14,6 +15,7 @@ Camera::Camera(float x, float y, float z) {
 
 void Camera::moveForward(float deltaTime, float speed)
 {
+    //not too good with matrix math. But I think it takes the player position, adds 
     cameraPos += speed * deltaTime * cameraFront;
 }
 

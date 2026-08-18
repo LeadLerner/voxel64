@@ -29,6 +29,7 @@ Engine::Engine()
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_NORMALIZE);
+    glEnable(GL_DEPTH_TEST);
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -37,20 +38,65 @@ Engine::Engine()
 
 void Engine::generateChunk(unsigned char chunk[], unsigned char chunkSize)
 {
+    // the name says it all. This just fiils the chunk with type 1 blocks. Will change soon.
     for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
     {
 
         chunk[i] = 1;
     }
+    setBlock(chunk, chunkSize, 0, 3, chunkSize - 1, 3);
+}
+
+void Engine::setBlock(unsigned char chunk[], unsigned char chunkSize, unsigned char blockType, unsigned char x, unsigned char y, unsigned char z)
+{
+    chunk[x + (y * chunkSize) + (z * chunkSize * chunkSize)] = blockType;
 }
 
 unsigned char Engine::pickBlock(unsigned char chunk[], unsigned char chunkSize, unsigned char x, unsigned char y, unsigned char z)
 {
+    // I think this works. Converts coords into 1d index.
     return chunk[x + (y * chunkSize) + (z * chunkSize * chunkSize)];
+}
+
+void Engine::drawBlock(unsigned char chunk[], unsigned char chunkSize, unsigned char x, unsigned char y, unsigned char z)
+{
+    glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+    if (pickBlock(chunk, chunkSize, x, y, z - 1) == 0 || z == 0)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBackIndices);
+    }
+    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+    if (pickBlock(chunk, chunkSize, x, y, z + 1) == 0 || z == chunkSize - 1)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockFrontIndices);
+    }
+    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+    if (pickBlock(chunk, chunkSize, x - 1, y, z) == 0 || x == 0)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockLeftIndices);
+    }
+    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+    if (pickBlock(chunk, chunkSize, x + 1, y, z) == 0 || x == chunkSize - 1)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockRightIndices);
+    }
+    glColor4f(1.0f, 0.0f, 1.0f, 0.5f);
+    if (pickBlock(chunk, chunkSize, x, y - 1, z) == 0 || y == 0)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBottomIndices);
+    }
+
+    glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
+    if (pickBlock(chunk, chunkSize, x, y + 1, z) == 0 || y == chunkSize - 1)
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockTopIndices);
+    }
 }
 
 void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
 {
+    // again, pretty self explanatory. Loop through the chunk (O(N^3) complexity but we'll deal with that later), check if it's air(block type 0), if it is, skip drawing.
+    // if not air, draw the cube.
     for (int x = 0; x < chunkSize; x++)
     {
         glTranslatef(x, 0, 0);
@@ -60,20 +106,10 @@ void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
             for (int z = 0; z < chunkSize; z++)
             {
                 glTranslatef(0, 0, z);
-                if (pickBlock(chunk, chunkSize, x, y, z) != 0)
+                chunkIndex = pickBlock(chunk, chunkSize, x, y, z);
+                if (chunkIndex != 0)
                 {
-                    glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBackIndices);
-                    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockFrontIndices);
-                    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockLeftIndices);
-                    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockRightIndices);
-                    glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockBottomIndices);
-                    glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, blockTopIndices);
+                    drawBlock(chunk, chunkSize, x, y, z);
                 }
                 glTranslatef(0, 0, -z);
             }
@@ -85,7 +121,11 @@ void Engine::drawChunk(unsigned char chunk[], unsigned char chunkSize)
 
 void Engine::update()
 {
-    generateChunk(chunk, 3);
+    // basically, generate the chunk each frame
+    // not efficient, will change later to only generate once and regenerate when block broken, block placed, or entering a new chunk.
+
+    // dpad moves playerCamera, joystick rotates it.
+    generateChunk(chunk, chunkSize);
     deltaTime = display_get_delta_time();
     joypad_poll();
 
@@ -124,28 +164,28 @@ void Engine::update()
     {
         player.lookPitch(deltaTime, controllerInputs.stick_y);
     }
+    // later on we will have a player class, so this will become player.camera.update() or something like that.
     player.update();
 }
 
 void Engine::render()
 {
-    // Start a new frame
-    // Get the frame buffer and z-buffer
+    // pretty simple, just grabs the display buffer and zbuffer, clears the screen, and draws a new frame.
     surface_t *disp = display_get();
     surface_t *zbuf = display_get_zbuf();
     // Attach the buffers to the RDP
     rdpq_attach_clear(disp, zbuf);
 
-    // Begin OpenGL compatibility with the RDP
     gl_context_begin();
 
     // Set the camera's position
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    // perhaps this should be changed to player.draw(). Not accurate, but i need player movement inside a valid opengl context.
     player.moveAndOrient();
 
-    drawChunk(chunk, 3);
+    drawChunk(chunk, chunkSize);
 
     gl_context_end();
 
